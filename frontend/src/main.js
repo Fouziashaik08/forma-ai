@@ -2,6 +2,7 @@ import './style.css'
 
 document.querySelector('#app').innerHTML = `
   <div class="app">
+
     <header class="navbar">
       <div class="logo">Forma AI</div>
 
@@ -39,10 +40,14 @@ document.querySelector('#app').innerHTML = `
       <section id="features" class="features">
         <div class="section-heading">
           <p class="eyebrow">FEATURES</p>
-          <h2>Everything you need to build better forms.</h2>
+
+          <h2>
+            Everything you need to build better forms.
+          </h2>
         </div>
 
         <div class="feature-grid">
+
           <div class="feature-card">
             <h3>AI Generation</h3>
             <p>
@@ -63,20 +68,112 @@ document.querySelector('#app').innerHTML = `
               Understand your responses with clear and useful insights.
             </p>
           </div>
+
         </div>
       </section>
     </main>
-  </div>
-`;
 
-document.querySelector('.primary-btn').addEventListener('click', () => {
-  alert('Form builder coming soon!');
-});
+  </div>
+`
+
+// Learn More button
 document.querySelector('.secondary-btn').addEventListener('click', () => {
   document.querySelector('#features').scrollIntoView({
     behavior: 'smooth'
   })
 })
+
+// Get Started button
 document.querySelector('.login-btn').addEventListener('click', () => {
-  alert('Welcome to Forma AI!');
+  alert('Welcome to Forma AI!')
+})
+
+// Create a Form button
+document.querySelector('.primary-btn').addEventListener('click', () => {
+
+  document.querySelector('#home').innerHTML = `
+    <div class="builder">
+
+      <p class="eyebrow">FORMA AI BUILDER</p>
+
+      <h1>Create your form with AI.</h1>
+
+      <p class="hero-text">
+        Describe the form you want to create.
+      </p>
+
+      <textarea
+        id="form-prompt"
+        placeholder="Example: Create a feedback form for college students"
+      ></textarea>
+
+      <br><br>
+
+      <button id="generate-btn" class="primary-btn">
+        Generate Form
+      </button>
+
+      <div id="form-result"></div>
+
+    </div>
+  `
+
+  // Generate Form button
+  document.querySelector('#generate-btn').addEventListener('click', () => {
+
+    const prompt = document.querySelector('#form-prompt').value.trim()
+
+    if (!prompt) {
+      alert('Please describe the form you want to create.')
+      return
+    }
+    document.querySelector('#form-result').innerHTML = `
+      <div class="generated-form">
+
+        <h2>Generated Form</h2>
+
+        <p class="form-description">
+          Based on: "${prompt}"
+        </p>
+
+        <label>
+          Your Name
+          <input
+            type="text"
+            placeholder="Enter your name"
+          >
+        </label>
+
+        <br><br>
+
+        <label>
+          Email Address
+          <input
+            type="email"
+            placeholder="Enter your email"
+          >
+        </label>
+
+        <br><br>
+
+        <label>
+          Your Feedback
+          <textarea
+            placeholder="Write your response"
+          ></textarea>
+        </label>
+
+        <br><br>
+
+        <button id="submit-form-btn" class="primary-btn" type="button">
+          Submit Form
+        </button>
+
+      </div>
+    `
+
+    document.querySelector('#submit-form-btn').addEventListener('click', () => {
+      alert('Form submitted successfully!')
+    })
+  })
 })
