@@ -1,32 +1,28 @@
-require("dotenv").config();
+const express = require('express')
+const mongoose = require('mongoose')
+const cors = require('cors')
+require('dotenv').config()
 
-const express = require("express");
-const mongoose = require("mongoose");
+const app = express()
+const PORT = process.env.PORT || 5000
 
-const app = express();
+app.use(cors())
+app.use(express.json())
 
-const PORT = 5000;
+app.get('/', (req, res) => {
+  res.json({
+    message: 'Forma AI backend is running'
+  })
+})
 
-app.use(express.json());
-
-// Connect to MongoDB
-mongoose
-  .connect(process.env.MONGO_URI)
+mongoose.connect(process.env.MONGO_URI)
   .then(() => {
-    console.log("MongoDB connected successfully!");
+    console.log('MongoDB connected successfully')
+
+    app.listen(PORT, () => {
+      console.log(`Forma AI backend running on http://localhost:${PORT}`)
+    })
   })
   .catch((error) => {
-    console.error("MongoDB connection failed:", error.message);
-  });
-
-// Form routes
-const formRoutes = require("./routes/formRoutes");
-app.use("/api/forms", formRoutes);
-
-app.get("/", (req, res) => {
-  res.send("Forma AI Backend is running!");
-});
-
-app.listen(PORT, () => {
-  console.log(`Server running on http://localhost:${PORT}`);
-});
+    console.error('MongoDB connection failed:', error.message)
+  })
