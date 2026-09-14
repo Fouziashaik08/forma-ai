@@ -1,60 +1,82 @@
 import './style.css'
-import heroImg from './assets/hero.png'
-import javascriptLogo from './assets/javascript.svg'
-import viteLogo from './assets/vite.svg'
-import { setupCounter } from './counter.js'
 
 document.querySelector('#app').innerHTML = `
-<section id="center">
-  <div class="hero">
-    <img src="${heroImg}" class="base" width="170" height="179">
-    <img src="${javascriptLogo}" class="framework" alt="JavaScript logo"/>
-    <img src="${viteLogo}" class="vite" alt="Vite logo" />
-  </div>
-  <div>
-    <h1>Get started</h1>
-    <p>Edit <code>src/main.js</code> and save to test <code>HMR</code></p>
-  </div>
-  <button id="counter" type="button" class="counter"></button>
-</section>
+  <div class="app">
+    <header class="navbar">
+      <div class="logo">Forma AI</div>
 
-<div class="ticks"></div>
+      <nav>
+        <a href="#home">Home</a>
+        <a href="#features">Features</a>
+        <a href="#about">About</a>
+      </nav>
 
-<section id="next-steps">
-  <div id="docs">
-    <svg class="icon" role="presentation" aria-hidden="true"><use href="/icons.svg#documentation-icon"></use></svg>
-    <h2>Documentation</h2>
-    <p>Your questions, answered</p>
-    <ul>
-      <li>
-        <a href="https://vite.dev/" target="_blank">
-          <img class="logo" src="${viteLogo}" alt="" />
-          Explore Vite
-        </a>
-      </li>
-      <li>
-        <a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript" target="_blank">
-          <img class="button-icon" src="${javascriptLogo}" alt="">
-          Learn more
-        </a>
-      </li>
-    </ul>
+      <button class="login-btn">Get Started</button>
+    </header>
+
+    <main>
+      <section id="home" class="hero-section">
+        <div class="hero-content">
+          <p class="eyebrow">AI-POWERED FORMS</p>
+
+          <h1>
+            Create smarter forms
+            <span>with AI.</span>
+          </h1>
+
+          <p class="hero-text">
+            Build beautiful, intelligent forms faster with Forma AI.
+            Let AI handle the complexity while you focus on what matters.
+          </p>
+
+          <div class="hero-buttons">
+            <button class="primary-btn">Create a Form</button>
+            <button class="secondary-btn">Learn More</button>
+          </div>
+        </div>
+      </section>
+
+      <section id="features" class="features">
+        <div class="section-heading">
+          <p class="eyebrow">FEATURES</p>
+          <h2>Everything you need to build better forms.</h2>
+        </div>
+
+        <div class="feature-grid">
+          <div class="feature-card">
+            <h3>AI Generation</h3>
+            <p>
+              Describe the form you need and let AI generate it for you.
+            </p>
+          </div>
+
+          <div class="feature-card">
+            <h3>Smart Logic</h3>
+            <p>
+              Create dynamic forms that adapt to every user's response.
+            </p>
+          </div>
+
+          <div class="feature-card">
+            <h3>Simple Analytics</h3>
+            <p>
+              Understand your responses with clear and useful insights.
+            </p>
+          </div>
+        </div>
+      </section>
+    </main>
   </div>
-  <div id="social">
-    <svg class="icon" role="presentation" aria-hidden="true"><use href="/icons.svg#social-icon"></use></svg>
-    <h2>Connect with us</h2>
-    <p>Join the Vite community</p>
-    <ul>
-      <li><a href="https://github.com/vitejs/vite" target="_blank"><svg class="button-icon" role="presentation" aria-hidden="true"><use href="/icons.svg#github-icon"></use></svg>GitHub</a></li>
-      <li><a href="https://chat.vite.dev/" target="_blank"><svg class="button-icon" role="presentation" aria-hidden="true"><use href="/icons.svg#discord-icon"></use></svg>Discord</a></li>
-      <li><a href="https://x.com/vite_js" target="_blank"><svg class="button-icon" role="presentation" aria-hidden="true"><use href="/icons.svg#x-icon"></use></svg>X.com</a></li>
-      <li><a href="https://bsky.app/profile/vite.dev" target="_blank"><svg class="button-icon" role="presentation" aria-hidden="true"><use href="/icons.svg#bluesky-icon"></use></svg>Bluesky</a></li>
-    </ul>
-  </div>
-</section>
+`;
 
-<div class="ticks"></div>
-<section id="spacer"></section>
-`
-
-setupCounter(document.querySelector('#counter'))
+document.querySelector('.primary-btn').addEventListener('click', () => {
+  alert('Form builder coming soon!');
+});
+document.querySelector('.secondary-btn').addEventListener('click', () => {
+  document.querySelector('#features').scrollIntoView({
+    behavior: 'smooth'
+  })
+})
+document.querySelector('.login-btn').addEventListener('click', () => {
+  alert('Welcome to Forma AI!');
+})
