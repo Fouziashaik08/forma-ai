@@ -172,8 +172,37 @@ document.querySelector('.primary-btn').addEventListener('click', () => {
       </div>
     `
 
-    document.querySelector('#submit-form-btn').addEventListener('click', () => {
-      alert('Form submitted successfully!')
+    document.querySelector('#submit-form-btn').addEventListener('click', async () => {
+  const name = document.querySelector('.generated-form input[type="text"]').value
+  const email = document.querySelector('.generated-form input[type="email"]').value
+  const feedback = document.querySelector('.generated-form textarea').value
+
+  try {
+    const response = await fetch('http://localhost:5000/api/forms', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        name,
+        email,
+        feedback
+      })
     })
+
+    const result = await response.json()
+
+    if (response.ok) {
+      alert('Form submitted successfully!')
+      console.log(result)
+    } else {
+      alert('Failed to submit form.')
+      console.error(result)
+    }
+  } catch (error) {
+    alert('Could not connect to the backend.')
+    console.error(error)
+  }
+})
   })
 })
