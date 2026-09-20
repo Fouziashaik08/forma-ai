@@ -40,6 +40,96 @@ app.post('/api/forms', async (req, res) => {
   }
 })
 
+// No-cost local form generator
+app.post('/api/generate-form', (req, res) => {
+  try {
+    const { prompt } = req.body
+
+    if (!prompt) {
+      return res.status(400).json({
+        message: 'Prompt is required'
+      })
+    }
+
+    const lowerPrompt = prompt.toLowerCase()
+
+    let form = {
+      title: 'Student Feedback Form',
+      description: 'Please share your feedback with us.',
+      fields: [
+        {
+          label: 'Your Name',
+          type: 'text'
+        },
+        {
+          label: 'Email Address',
+          type: 'email'
+        },
+        {
+          label: 'Your Feedback',
+          type: 'textarea'
+        }
+      ]
+    }
+
+    if (lowerPrompt.includes('registration')) {
+      form = {
+        title: 'Registration Form',
+        description: 'Please enter your registration details.',
+        fields: [
+          {
+            label: 'Full Name',
+            type: 'text'
+          },
+          {
+            label: 'Email Address',
+            type: 'email'
+          },
+          {
+            label: 'Age',
+            type: 'number'
+          },
+          {
+            label: 'Date of Birth',
+            type: 'date'
+          }
+        ]
+      }
+    }
+
+    if (lowerPrompt.includes('contact')) {
+      form = {
+        title: 'Contact Form',
+        description: 'Please enter your contact details.',
+        fields: [
+          {
+            label: 'Name',
+            type: 'text'
+          },
+          {
+            label: 'Email Address',
+            type: 'email'
+          },
+          {
+            label: 'Message',
+            type: 'textarea'
+          }
+        ]
+      }
+    }
+
+    res.json(form)
+
+  } catch (error) {
+    console.error('Form generation failed:', error.message)
+
+    res.status(500).json({
+      message: 'Failed to generate form',
+      error: error.message
+    })
+  }
+})
+
 mongoose.connect(process.env.MONGO_URI)
   .then(() => {
     console.log('MongoDB connected successfully')

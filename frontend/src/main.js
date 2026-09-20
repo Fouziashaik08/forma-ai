@@ -76,19 +76,19 @@ document.querySelector('#app').innerHTML = `
   </div>
 `
 
-// Learn More button
+// Learn More
 document.querySelector('.secondary-btn').addEventListener('click', () => {
   document.querySelector('#features').scrollIntoView({
     behavior: 'smooth'
   })
 })
 
-// Get Started button
+// Get Started
 document.querySelector('.login-btn').addEventListener('click', () => {
   alert('Welcome to Forma AI!')
 })
 
-// Create a Form button
+// Create a Form
 document.querySelector('.primary-btn').addEventListener('click', () => {
 
   document.querySelector('#home').innerHTML = `
@@ -118,8 +118,8 @@ document.querySelector('.primary-btn').addEventListener('click', () => {
     </div>
   `
 
-  // Generate Form button
-  document.querySelector('#generate-btn').addEventListener('click', () => {
+  // Generate Form
+  document.querySelector('#generate-btn').addEventListener('click', async () => {
 
     const prompt = document.querySelector('#form-prompt').value.trim()
 
@@ -127,82 +127,141 @@ document.querySelector('.primary-btn').addEventListener('click', () => {
       alert('Please describe the form you want to create.')
       return
     }
-    document.querySelector('#form-result').innerHTML = `
-      <div class="generated-form">
 
-        <h2>Generated Form</h2>
+    try {
 
-        <p class="form-description">
-          Based on: "${prompt}"
-        </p>
-
-        <label>
-          Your Name
-          <input
-            type="text"
-            placeholder="Enter your name"
-          >
-        </label>
-
-        <br><br>
-
-        <label>
-          Email Address
-          <input
-            type="email"
-            placeholder="Enter your email"
-          >
-        </label>
-
-        <br><br>
-
-        <label>
-          Your Feedback
-          <textarea
-            placeholder="Write your response"
-          ></textarea>
-        </label>
-
-        <br><br>
-
-        <button id="submit-form-btn" class="primary-btn" type="button">
-          Submit Form
-        </button>
-
-      </div>
-    `
-
-    document.querySelector('#submit-form-btn').addEventListener('click', async () => {
-  const name = document.querySelector('.generated-form input[type="text"]').value
-  const email = document.querySelector('.generated-form input[type="email"]').value
-  const feedback = document.querySelector('.generated-form textarea').value
-
-  try {
-    const response = await fetch('http://localhost:5000/api/forms', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json'
-      },
-      body: JSON.stringify({
-        name,
-        email,
-        feedback
+      const response = await fetch('http://localhost:5000/api/generate-form', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ prompt })
       })
-    })
 
-    const result = await response.json()
+      const aiForm = await response.json()
 
-    if (response.ok) {
-      alert('Form submitted successfully!')
-      console.log(result)
-    } else {
-      alert('Failed to submit form.')
-      console.error(result)
+      if (!response.ok) {
+        alert(aiForm.message || 'Failed to generate form.')
+        return
+      }
+
+      console.log('AI Form:', aiForm)
+
+      const fieldsHTML = aiForm.fields.map((field) => {
+
+        if (field.type === 'textarea') {
+          return `
+            <label>
+              ${field.label}
+              <textarea
+                name="${field.label}"
+                placeholder="${field.label}"
+              ></textarea>
+            </label>
+            <br><br>
+          `
+        }
+
+        if (field.type === 'checkbox') {
+          return `
+            <label>
+              <input
+                type="checkbox"
+                name="${field.label}"
+              >
+              ${field.label}
+            </label>
+            <br><br>
+          `
+        }
+
+        return `
+          <label>
+            ${field.label}
+            <input
+              type="${field.type}"
+              name="${field.label}"
+              placeholder="${field.label}"
+            >
+          </label>
+          <br><br>
+        `
+      }).join('')
+
+      document.querySelector('#form-result').innerHTML = `
+        <div class="generated-form">
+
+          <h2>${aiForm.title}</h2>
+
+          <p class="form-description">
+            ${aiForm.description}
+          </p>
+
+          ${fieldsHTML}
+
+          <button
+            id="submit-form-btn"
+            class="primary-btn"
+            type="button"
+          >
+            Submit Form
+          </button>
+
+        </div>
+      `
+
+      document
+        .querySelector('#submit-form-btn')
+        .addEventListener('click', async () => {
+
+          const inputs = document.querySelectorAll(
+            '.generated-form input, .generated-form textarea'
+          )
+
+          const formData = {}
+
+          inputs.forEach((input) => {
+            if (input.type === 'checkbox') {
+              formData[input.name] = input.checked
+            } else {
+              formData[input.name] = input.value
+            }
+          })
+
+          try {
+
+            const submitResponse = await fetch(
+              'http://localhost:5000/api/forms',
+              {
+                method: 'POST',
+                headers: {
+                  'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(formData)
+              }
+            )
+
+            const result = await submitResponse.json()
+
+            if (submitResponse.ok) {
+              alert('Form submitted successfully!')
+              console.log(result)
+            } else {
+              alert('Failed to submit form.')
+              console.error(result)
+            }
+
+          } catch (error) {
+            alert('Could not connect to the backend.')
+            console.error(error)
+          }
+        })
+
+    } catch (error) {
+
+      console.error('AI generation error:', error)
+
+      alert('Could not connect to the AI backend.')
     }
-  } catch (error) {
-    alert('Could not connect to the backend.')
-    console.error(error)
-  }
-})
   })
 })
