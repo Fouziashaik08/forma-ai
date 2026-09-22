@@ -2,6 +2,7 @@ import './style.css'
 
 document.querySelector('#app').innerHTML = `
   <div class="app">
+
     <header class="navbar">
       <div class="logo">Forma AI</div>
 
@@ -39,10 +40,14 @@ document.querySelector('#app').innerHTML = `
       <section id="features" class="features">
         <div class="section-heading">
           <p class="eyebrow">FEATURES</p>
-          <h2>Everything you need to build better forms.</h2>
+
+          <h2>
+            Everything you need to build better forms.
+          </h2>
         </div>
 
         <div class="feature-grid">
+
           <div class="feature-card">
             <h3>AI Generation</h3>
             <p>
@@ -63,20 +68,200 @@ document.querySelector('#app').innerHTML = `
               Understand your responses with clear and useful insights.
             </p>
           </div>
+
         </div>
       </section>
     </main>
-  </div>
-`;
 
-document.querySelector('.primary-btn').addEventListener('click', () => {
-  alert('Form builder coming soon!');
-});
+  </div>
+`
+
+// Learn More
 document.querySelector('.secondary-btn').addEventListener('click', () => {
   document.querySelector('#features').scrollIntoView({
     behavior: 'smooth'
   })
 })
+
+// Get Started
 document.querySelector('.login-btn').addEventListener('click', () => {
-  alert('Welcome to Forma AI!');
+  alert('Welcome to Forma AI!')
+})
+
+// Create a Form
+document.querySelector('.primary-btn').addEventListener('click', () => {
+
+  document.querySelector('#home').innerHTML = `
+    <div class="builder">
+
+      <p class="eyebrow">FORMA AI BUILDER</p>
+
+      <h1>Create your form with AI.</h1>
+
+      <p class="hero-text">
+        Describe the form you want to create.
+      </p>
+
+      <textarea
+        id="form-prompt"
+        placeholder="Example: Create a feedback form for college students"
+      ></textarea>
+
+      <br><br>
+
+      <button id="generate-btn" class="primary-btn">
+        Generate Form
+      </button>
+
+      <div id="form-result"></div>
+
+    </div>
+  `
+
+  // Generate Form
+  document.querySelector('#generate-btn').addEventListener('click', async () => {
+
+    const prompt = document.querySelector('#form-prompt').value.trim()
+
+    if (!prompt) {
+      alert('Please describe the form you want to create.')
+      return
+    }
+
+    try {
+
+      const response = await fetch('http://localhost:5000/api/generate-form', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ prompt })
+      })
+
+      const aiForm = await response.json()
+
+      if (!response.ok) {
+        alert(aiForm.message || 'Failed to generate form.')
+        return
+      }
+
+      console.log('AI Form:', aiForm)
+
+      const fieldsHTML = aiForm.fields.map((field) => {
+
+        if (field.type === 'textarea') {
+          return `
+            <label>
+              ${field.label}
+              <textarea
+                name="${field.label}"
+                placeholder="${field.label}"
+              ></textarea>
+            </label>
+            <br><br>
+          `
+        }
+
+        if (field.type === 'checkbox') {
+          return `
+            <label>
+              <input
+                type="checkbox"
+                name="${field.label}"
+              >
+              ${field.label}
+            </label>
+            <br><br>
+          `
+        }
+
+        return `
+          <label>
+            ${field.label}
+            <input
+              type="${field.type}"
+              name="${field.label}"
+              placeholder="${field.label}"
+            >
+          </label>
+          <br><br>
+        `
+      }).join('')
+
+      document.querySelector('#form-result').innerHTML = `
+        <div class="generated-form">
+
+          <h2>${aiForm.title}</h2>
+
+          <p class="form-description">
+            ${aiForm.description}
+          </p>
+
+          ${fieldsHTML}
+
+          <button
+            id="submit-form-btn"
+            class="primary-btn"
+            type="button"
+          >
+            Submit Form
+          </button>
+
+        </div>
+      `
+
+      document
+        .querySelector('#submit-form-btn')
+        .addEventListener('click', async () => {
+
+          const inputs = document.querySelectorAll(
+            '.generated-form input, .generated-form textarea'
+          )
+
+          const formData = {}
+
+          inputs.forEach((input) => {
+            if (input.type === 'checkbox') {
+              formData[input.name] = input.checked
+            } else {
+              formData[input.name] = input.value
+            }
+          })
+
+          try {
+
+            const submitResponse = await fetch(
+              'http://localhost:5000/api/forms',
+              {
+                method: 'POST',
+                headers: {
+                  'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(formData)
+              }
+            )
+
+            const result = await submitResponse.json()
+
+            if (submitResponse.ok) {
+              alert('Form submitted successfully!')
+              console.log(result)
+            } else {
+              alert('Failed to submit form.')
+              console.error(result)
+            }
+
+          } catch (error) {
+            alert('Could not connect to the backend.')
+            console.error(error)
+          }
+        })
+
+    } catch (error) {
+
+      console.error('AI generation error:', error)
+
+      alert('Could not connect to the AI backend.')
+    }
+  })
 })
