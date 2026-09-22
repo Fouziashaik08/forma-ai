@@ -13,6 +13,7 @@ const formSchema = new mongoose.Schema({
   formTitle: String,
   formData: mongoose.Schema.Types.Mixed
 })
+
 const Form = mongoose.model('Form', formSchema)
 
 app.get('/', (req, res) => {
@@ -23,12 +24,12 @@ app.get('/', (req, res) => {
 
 app.post('/api/forms', async (req, res) => {
   try {
-const newForm = new Form({
-  formTitle: req.body.formTitle || 'Generated Form',
-  formData: req.body.formData || req.body
-})    
+    const newForm = new Form({
+      formTitle: req.body.formTitle || 'Generated Form',
+      formData: req.body.formData || req.body
+    })
 
-const savedForm = await newForm.save()
+    const savedForm = await newForm.save()
 
     res.status(201).json({
       message: 'Form submitted successfully',
@@ -37,6 +38,20 @@ const savedForm = await newForm.save()
   } catch (error) {
     res.status(500).json({
       message: 'Failed to save form',
+      error: error.message
+    })
+  }
+})
+
+// Get all submitted forms
+app.get('/api/forms', async (req, res) => {
+  try {
+    const forms = await Form.find()
+
+    res.json(forms)
+  } catch (error) {
+    res.status(500).json({
+      message: 'Failed to fetch forms',
       error: error.message
     })
   }
@@ -119,56 +134,56 @@ app.post('/api/generate-form', (req, res) => {
         ]
       }
     }
-    
-if (lowerPrompt.includes('survey')) {
-  form = {
-    title: 'Survey Form',
-    description: 'Please share your opinions and preferences.',
-    fields: [
-      {
-        label: 'Your Name',
-        type: 'text'
-      },
-      {
-        label: 'Email Address',
-        type: 'email'
-      },
-      {
-        label: 'How satisfied are you?',
-        type: 'text'
-      },
-      {
-        label: 'Your Suggestions',
-        type: 'textarea'
-      }
-    ]
-  }
-}
 
-if (lowerPrompt.includes('event')) {
-  form = {
-    title: 'Event Registration Form',
-    description: 'Please enter your details to register for the event.',
-    fields: [
-      {
-        label: 'Full Name',
-        type: 'text'
-      },
-      {
-        label: 'Email Address',
-        type: 'email'
-      },
-      {
-        label: 'Phone Number',
-        type: 'tel'
-      },
-      {
-        label: 'Event Date',
-        type: 'date'
+    if (lowerPrompt.includes('survey')) {
+      form = {
+        title: 'Survey Form',
+        description: 'Please share your opinions and preferences.',
+        fields: [
+          {
+            label: 'Your Name',
+            type: 'text'
+          },
+          {
+            label: 'Email Address',
+            type: 'email'
+          },
+          {
+            label: 'How satisfied are you?',
+            type: 'text'
+          },
+          {
+            label: 'Your Suggestions',
+            type: 'textarea'
+          }
+        ]
       }
-    ]
-  }
-}
+    }
+
+    if (lowerPrompt.includes('event')) {
+      form = {
+        title: 'Event Registration Form',
+        description: 'Please enter your details to register for the event.',
+        fields: [
+          {
+            label: 'Full Name',
+            type: 'text'
+          },
+          {
+            label: 'Email Address',
+            type: 'email'
+          },
+          {
+            label: 'Phone Number',
+            type: 'tel'
+          },
+          {
+            label: 'Event Date',
+            type: 'date'
+          }
+        ]
+      }
+    }
 
     res.json(form)
 
