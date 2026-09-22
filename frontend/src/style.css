@@ -15,6 +15,7 @@ body {
 }
 
 /* Navbar */
+
 .navbar {
   height: 72px;
   display: flex;
@@ -23,6 +24,9 @@ body {
   padding: 0 60px;
   border-bottom: 1px solid #252936;
   background: #0f1117;
+  position: sticky;
+  top: 0;
+  z-index: 10;
 }
 
 .logo {
@@ -39,6 +43,7 @@ body {
   color: #b8c0d4;
   text-decoration: none;
   font-size: 15px;
+  transition: color 0.2s ease;
 }
 
 .navbar nav a:hover {
@@ -53,9 +58,16 @@ body {
   color: #111318;
   font-weight: 600;
   cursor: pointer;
+  transition: transform 0.2s ease, opacity 0.2s ease;
+}
+
+.login-btn:hover {
+  transform: translateY(-2px);
+  opacity: 0.9;
 }
 
 /* Hero */
+
 .hero-section {
   min-height: 620px;
   display: flex;
@@ -108,6 +120,7 @@ body {
   font-size: 15px;
   font-weight: 600;
   cursor: pointer;
+  transition: transform 0.2s ease, opacity 0.2s ease, border-color 0.2s ease;
 }
 
 .primary-btn {
@@ -116,13 +129,27 @@ body {
   color: #111318;
 }
 
+.primary-btn:hover,
+.secondary-btn:hover {
+  transform: translateY(-2px);
+}
+
+.primary-btn:hover {
+  opacity: 0.9;
+}
+
 .secondary-btn {
   border: 1px solid #343949;
   background: transparent;
   color: #ffffff;
 }
 
+.secondary-btn:hover {
+  border-color: #69728a;
+}
+
 /* Features */
+
 .features {
   padding: 90px 60px;
   border-top: 1px solid #252936;
@@ -152,6 +179,12 @@ body {
   border: 1px solid #292d39;
   border-radius: 14px;
   background: #151820;
+  transition: transform 0.2s ease, border-color 0.2s ease;
+}
+
+.feature-card:hover {
+  transform: translateY(-4px);
+  border-color: #454b5c;
 }
 
 .feature-card h3 {
@@ -164,39 +197,13 @@ body {
   line-height: 1.6;
 }
 
-/* Mobile */
-@media (max-width: 768px) {
-  .navbar {
-    padding: 0 20px;
-  }
-
-  .navbar nav {
-    display: none;
-  }
-
-  .hero-content h1 {
-    font-size: 42px;
-  }
-
-  .hero-text {
-    font-size: 16px;
-  }
-
-  .feature-grid {
-    grid-template-columns: 1fr;
-  }
-
-  .features {
-    padding: 70px 20px;
-  }
-}
 /* Form Builder */
 
 .builder {
-  max-width: 800px;
+  max-width: 850px;
   margin: 0 auto;
   text-align: center;
-  padding: 60px 20px;
+  padding: 80px 20px;
 }
 
 .builder h1 {
@@ -206,15 +213,23 @@ body {
 
 #form-prompt {
   width: 100%;
-  min-height: 140px;
+  min-height: 150px;
+  margin-top: 10px;
   padding: 18px;
   border: 1px solid #343949;
   border-radius: 12px;
   background: #151820;
   color: #ffffff;
   font-size: 16px;
+  line-height: 1.5;
   resize: vertical;
   outline: none;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+#form-prompt:focus {
+  border-color: #69728a;
+  box-shadow: 0 0 0 3px rgba(105, 114, 138, 0.12);
 }
 
 #form-prompt::placeholder {
@@ -225,21 +240,24 @@ body {
   margin-top: 10px;
 }
 
+/* Generated Form */
+
 #form-result {
   margin-top: 50px;
   text-align: left;
 }
 
 .generated-form {
-  padding: 30px;
+  padding: 35px;
   border: 1px solid #292d39;
-  border-radius: 14px;
+  border-radius: 16px;
   background: #151820;
+  box-shadow: 0 15px 40px rgba(0, 0, 0, 0.2);
 }
 
 .generated-form h2 {
-  font-size: 28px;
-  margin-bottom: 15px;
+  font-size: 30px;
+  margin-bottom: 12px;
 }
 
 .form-description {
@@ -252,7 +270,7 @@ body {
   display: block;
   color: #ffffff;
   font-weight: 600;
-  margin-bottom: 8px;
+  margin-bottom: 18px;
 }
 
 .generated-form input,
@@ -266,9 +284,77 @@ body {
   color: #ffffff;
   font-size: 15px;
   outline: none;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.generated-form input:focus,
+.generated-form textarea:focus {
+  border-color: #69728a;
+  box-shadow: 0 0 0 3px rgba(105, 114, 138, 0.12);
 }
 
 .generated-form textarea {
   min-height: 120px;
   resize: vertical;
+}
+
+#submit-form-btn {
+  margin-top: 10px;
+}
+
+/* Mobile */
+
+@media (max-width: 768px) {
+  .navbar {
+    padding: 0 20px;
+  }
+
+  .navbar nav {
+    display: none;
+  }
+
+  .hero-section {
+    min-height: 560px;
+  }
+
+  .hero-content h1 {
+    font-size: 42px;
+  }
+
+  .hero-text {
+    font-size: 16px;
+  }
+
+  .hero-buttons {
+    flex-direction: column;
+    align-items: center;
+  }
+
+  .hero-buttons button {
+    width: 200px;
+  }
+
+  .feature-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .features {
+    padding: 70px 20px;
+  }
+
+  .section-heading h2 {
+    font-size: 30px;
+  }
+
+  .builder {
+    padding: 60px 20px;
+  }
+
+  .builder h1 {
+    font-size: 36px;
+  }
+
+  .generated-form {
+    padding: 25px;
+  }
 }

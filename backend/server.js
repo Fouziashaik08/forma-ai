@@ -10,11 +10,9 @@ app.use(cors())
 app.use(express.json())
 
 const formSchema = new mongoose.Schema({
-  name: String,
-  email: String,
-  feedback: String
+  formTitle: String,
+  formData: mongoose.Schema.Types.Mixed
 })
-
 const Form = mongoose.model('Form', formSchema)
 
 app.get('/', (req, res) => {
@@ -25,8 +23,12 @@ app.get('/', (req, res) => {
 
 app.post('/api/forms', async (req, res) => {
   try {
-    const newForm = new Form(req.body)
-    const savedForm = await newForm.save()
+const newForm = new Form({
+  formTitle: req.body.formTitle || 'Generated Form',
+  formData: req.body.formData || req.body
+})    
+
+const savedForm = await newForm.save()
 
     res.status(201).json({
       message: 'Form submitted successfully',
@@ -117,6 +119,56 @@ app.post('/api/generate-form', (req, res) => {
         ]
       }
     }
+    
+if (lowerPrompt.includes('survey')) {
+  form = {
+    title: 'Survey Form',
+    description: 'Please share your opinions and preferences.',
+    fields: [
+      {
+        label: 'Your Name',
+        type: 'text'
+      },
+      {
+        label: 'Email Address',
+        type: 'email'
+      },
+      {
+        label: 'How satisfied are you?',
+        type: 'text'
+      },
+      {
+        label: 'Your Suggestions',
+        type: 'textarea'
+      }
+    ]
+  }
+}
+
+if (lowerPrompt.includes('event')) {
+  form = {
+    title: 'Event Registration Form',
+    description: 'Please enter your details to register for the event.',
+    fields: [
+      {
+        label: 'Full Name',
+        type: 'text'
+      },
+      {
+        label: 'Email Address',
+        type: 'email'
+      },
+      {
+        label: 'Phone Number',
+        type: 'tel'
+      },
+      {
+        label: 'Event Date',
+        type: 'date'
+      }
+    ]
+  }
+}
 
     res.json(form)
 
