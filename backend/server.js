@@ -9,9 +9,48 @@ const PORT = process.env.PORT || 5000
 app.use(cors())
 app.use(express.json())
 
+const fieldSchema = new mongoose.Schema({
+  name: {
+    type: String,
+    required: true
+  },
+
+  label: {
+    type: String,
+    required: true
+  },
+
+  type: {
+    type: String,
+    required: true
+  },
+
+  required: {
+    type: Boolean,
+    default: false
+  },
+
+  showIf: {
+    type: Object,
+    default: null
+  }
+})
+
 const formSchema = new mongoose.Schema({
-  formTitle: String,
-  formData: mongoose.Schema.Types.Mixed
+  formTitle: {
+    type: String,
+    required: true
+  },
+
+  fields: {
+    type: [fieldSchema],
+    default: []
+  },
+
+  formData: {
+    type: mongoose.Schema.Types.Mixed,
+    default: {}
+  }
 })
 
 const Form = mongoose.model('Form', formSchema)
@@ -26,6 +65,7 @@ app.post('/api/forms', async (req, res) => {
   try {
     const newForm = new Form({
       formTitle: req.body.formTitle || 'Generated Form',
+      fields: req.body.fields || [],
       formData: req.body.formData || req.body
     })
 
@@ -75,117 +115,196 @@ app.post('/api/generate-form', (req, res) => {
       description: 'Please share your feedback with us.',
       fields: [
         {
+          name: 'name',
           label: 'Your Name',
-          type: 'text'
+          type: 'text',
+          required: true,
+          showIf: null
         },
         {
+          name: 'email',
           label: 'Email Address',
-          type: 'email'
+          type: 'email',
+          required: true,
+          showIf: null
         },
         {
+          name: 'feedback',
           label: 'Your Feedback',
-          type: 'textarea'
+          type: 'textarea',
+          required: true,
+          showIf: null
         }
       ]
     }
 
+    // Registration Form
     if (lowerPrompt.includes('registration')) {
       form = {
         title: 'Registration Form',
         description: 'Please enter your registration details.',
         fields: [
           {
+            name: 'fullName',
             label: 'Full Name',
-            type: 'text'
+            type: 'text',
+            required: true,
+            showIf: null
           },
           {
+            name: 'email',
             label: 'Email Address',
-            type: 'email'
+            type: 'email',
+            required: true,
+            showIf: null
           },
           {
+            name: 'age',
             label: 'Age',
-            type: 'number'
+            type: 'number',
+            required: true,
+            showIf: null
           },
           {
+            name: 'dateOfBirth',
             label: 'Date of Birth',
-            type: 'date'
+            type: 'date',
+            required: true,
+            showIf: null
           }
         ]
       }
     }
 
+    // Contact Form
     if (lowerPrompt.includes('contact')) {
       form = {
         title: 'Contact Form',
         description: 'Please enter your contact details.',
         fields: [
           {
+            name: 'name',
             label: 'Name',
-            type: 'text'
+            type: 'text',
+            required: true,
+            showIf: null
           },
           {
+            name: 'email',
             label: 'Email Address',
-            type: 'email'
+            type: 'email',
+            required: true,
+            showIf: null
           },
           {
+            name: 'message',
             label: 'Message',
-            type: 'textarea'
+            type: 'textarea',
+            required: true,
+            showIf: null
           }
         ]
       }
     }
 
+    // Survey Form with conditional logic
     if (lowerPrompt.includes('survey')) {
       form = {
         title: 'Survey Form',
         description: 'Please share your opinions and preferences.',
         fields: [
           {
+            name: 'name',
             label: 'Your Name',
-            type: 'text'
+            type: 'text',
+            required: true,
+            showIf: null
           },
           {
+            name: 'email',
             label: 'Email Address',
-            type: 'email'
+            type: 'email',
+            required: true,
+            showIf: null
           },
           {
+            name: 'isStudent',
+            label: 'Are you a student?',
+            type: 'checkbox',
+            required: false,
+            showIf: null
+          },
+          {
+            name: 'collegeName',
+            label: 'College Name',
+            type: 'text',
+            required: true,
+            showIf: {
+              field: 'isStudent',
+              value: true
+            }
+          },
+          {
+            name: 'satisfaction',
             label: 'How satisfied are you?',
-            type: 'text'
+            type: 'text',
+            required: true,
+            showIf: null
           },
           {
+            name: 'suggestions',
             label: 'Your Suggestions',
-            type: 'textarea'
+            type: 'textarea',
+            required: false,
+            showIf: null
           }
         ]
       }
     }
 
+    // Event Registration Form
     if (lowerPrompt.includes('event')) {
       form = {
         title: 'Event Registration Form',
         description: 'Please enter your details to register for the event.',
         fields: [
           {
+            name: 'fullName',
             label: 'Full Name',
-            type: 'text'
+            type: 'text',
+            required: true,
+            showIf: null
           },
           {
+            name: 'email',
             label: 'Email Address',
-            type: 'email'
+            type: 'email',
+            required: true,
+            showIf: null
           },
           {
+            name: 'phone',
             label: 'Phone Number',
-            type: 'tel'
+            type: 'tel',
+            required: true,
+            showIf: null
           },
           {
+            name: 'eventDate',
             label: 'Event Date',
-            type: 'date'
+            type: 'date',
+            required: true,
+            showIf: null
           }
         ]
       }
     }
 
-    res.json(form)
+    res.json({
+      formTitle: form.title,
+      description: form.description,
+      fields: form.fields
+    })
 
   } catch (error) {
     console.error('Form generation failed:', error.message)

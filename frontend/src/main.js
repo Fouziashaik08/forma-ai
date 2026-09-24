@@ -119,149 +119,314 @@ document.querySelector('.primary-btn').addEventListener('click', () => {
   `
 
   // Generate Form
-  document.querySelector('#generate-btn').addEventListener('click', async () => {
+  document
+    .querySelector('#generate-btn')
+    .addEventListener('click', async () => {
 
-    const prompt = document.querySelector('#form-prompt').value.trim()
+      const prompt = document
+        .querySelector('#form-prompt')
+        .value
+        .trim()
 
-    if (!prompt) {
-      alert('Please describe the form you want to create.')
-      return
-    }
-
-    try {
-
-      const response = await fetch('http://localhost:5000/api/generate-form', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({ prompt })
-      })
-
-      const aiForm = await response.json()
-
-      if (!response.ok) {
-        alert(aiForm.message || 'Failed to generate form.')
+      if (!prompt) {
+        alert('Please describe the form you want to create.')
         return
       }
 
-      console.log('AI Form:', aiForm)
+      try {
 
-      const fieldsHTML = aiForm.fields.map((field) => {
+        const response = await fetch(
+          'http://localhost:5000/api/generate-form',
+          {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ prompt })
+          }
+        )
 
-        if (field.type === 'textarea') {
-          return `
-            <label>
-              ${field.label}
-              <textarea
-                name="${field.label}"
-                placeholder="${field.label}"
-              ></textarea>
-            </label>
-            <br><br>
-          `
+        const aiForm = await response.json()
+
+        if (!response.ok) {
+          alert(aiForm.message || 'Failed to generate form.')
+          return
         }
 
-        if (field.type === 'checkbox') {
-          return `
-            <label>
-              <input
-                type="checkbox"
-                name="${field.label}"
+        console.log('Generated Form:', aiForm)
+
+        // Create fields dynamically
+        const fieldsHTML = aiForm.fields.map((field) => {
+
+          const requiredAttribute =
+            field.required ? 'required' : ''
+
+          const showIfAttribute = field.showIf
+            ? `data-show-if-field="${field.showIf.field}"
+               data-show-if-value="${field.showIf.value}"`
+            : ''
+
+          // Textarea
+          if (field.type === 'textarea') {
+            return `
+              <div
+                class="dynamic-field"
+                ${showIfAttribute}
               >
-              ${field.label}
-            </label>
+
+                <label>
+                  ${field.label}
+
+                  <textarea
+                    name="${field.name}"
+                    placeholder="${field.label}"
+                    ${requiredAttribute}
+                  ></textarea>
+                </label>
+
+              </div>
+
+              <br><br>
+            `
+          }
+
+          // Checkbox
+          if (field.type === 'checkbox') {
+            return `
+              <div
+                class="dynamic-field"
+                ${showIfAttribute}
+              >
+
+                <label>
+                  <input
+                    type="checkbox"
+                    name="${field.name}"
+                    ${requiredAttribute}
+                  >
+
+                  ${field.label}
+                </label>
+
+              </div>
+
+              <br><br>
+            `
+          }
+
+          // Normal input
+          return `
+            <div
+              class="dynamic-field"
+              ${showIfAttribute}
+            >
+
+              <label>
+                ${field.label}
+
+                <input
+                  type="${field.type}"
+                  name="${field.name}"
+                  placeholder="${field.label}"
+                  ${requiredAttribute}
+                >
+              </label>
+
+            </div>
+
             <br><br>
           `
-        }
 
-        return `
-          <label>
-            ${field.label}
-            <input
-              type="${field.type}"
-              name="${field.label}"
-              placeholder="${field.label}"
-            >
-          </label>
-          <br><br>
-        `
-      }).join('')
+        }).join('')
 
-      document.querySelector('#form-result').innerHTML = `
-        <div class="generated-form">
-
-          <h2>${aiForm.title}</h2>
-
-          <p class="form-description">
-            ${aiForm.description}
-          </p>
-
-          ${fieldsHTML}
-
-          <button
-            id="submit-form-btn"
-            class="primary-btn"
-            type="button"
+        // Display generated form
+        document.querySelector('#form-result').innerHTML = `
+          <form
+            class="generated-form"
+            id="generated-form"
           >
-            Submit Form
-          </button>
 
-        </div>
-      `
+            <h2>${aiForm.formTitle}</h2>
 
-      document
-        .querySelector('#submit-form-btn')
-        .addEventListener('click', async () => {
+            <p class="form-description">
+              ${aiForm.description}
+            </p>
 
-          const inputs = document.querySelectorAll(
-            '.generated-form input, .generated-form textarea'
+            ${fieldsHTML}
+
+            <button
+              id="submit-form-btn"
+              class="primary-btn"
+              type="submit"
+            >
+              Submit Form
+            </button>
+
+          </form>
+        `
+
+        // Show / Hide conditional fields
+        const dynamicFields =
+          document.querySelectorAll('.dynamic-field')
+
+        dynamicFields.forEach((fieldElement) => {
+
+          const showIfField =
+            fieldElement.dataset.showIfField
+
+          const showIfValue =
+            fieldElement.dataset.showIfValue
+
+          // Normal field
+          if (!showIfField) {
+            return
+          }
+
+          // Find controller field
+          const controller = document.querySelector(
+            `[name="${showIfField}"]`
           )
 
-          const formData = {}
-
-          inputs.forEach((input) => {
-            if (input.type === 'checkbox') {
-              formData[input.name] = input.checked
-            } else {
-              formData[input.name] = input.value
-            }
-          })
-
-          try {
-
-            const submitResponse = await fetch(
-              'http://localhost:5000/api/forms',
-              {
-                method: 'POST',
-                headers: {
-                  'Content-Type': 'application/json'
-                },
-                body: JSON.stringify(formData)
-              }
-            )
-
-            const result = await submitResponse.json()
-
-            if (submitResponse.ok) {
-              alert('Form submitted successfully!')
-              console.log(result)
-            } else {
-              alert('Failed to submit form.')
-              console.error(result)
-            }
-
-          } catch (error) {
-            alert('Could not connect to the backend.')
-            console.error(error)
+          if (!controller) {
+            return
           }
+
+          // Update field visibility
+          const updateVisibility = () => {
+
+            let currentValue
+
+            if (controller.type === 'checkbox') {
+              currentValue = controller.checked
+            } else {
+              currentValue = controller.value
+            }
+
+            const shouldShow =
+              String(currentValue) ===
+              String(showIfValue)
+
+            // Show / hide field
+            fieldElement.style.display =
+              shouldShow ? 'block' : 'none'
+
+            // Disable hidden field
+            const input =
+              fieldElement.querySelector(
+                'input, textarea, select'
+              )
+
+            if (input) {
+              input.disabled = !shouldShow
+            }
+          }
+
+          // Listen for changes
+          controller.addEventListener(
+            'change',
+            updateVisibility
+          )
+
+          // Initial state
+          updateVisibility()
         })
 
-    } catch (error) {
+        // Submit generated form
+        document
+          .querySelector('#generated-form')
+          .addEventListener(
+            'submit',
+            async (event) => {
 
-      console.error('AI generation error:', error)
+              event.preventDefault()
 
-      alert('Could not connect to the AI backend.')
-    }
-  })
+              const inputs =
+                document.querySelectorAll(
+                  '#generated-form input, #generated-form textarea'
+                )
+
+              const formData = {}
+
+              inputs.forEach((input) => {
+
+                if (input.disabled) {
+                  return
+                }
+
+                if (input.type === 'checkbox') {
+                  formData[input.name] =
+                    input.checked
+                } else {
+                  formData[input.name] =
+                    input.value
+                }
+
+              })
+
+              try {
+
+                const submitResponse =
+                  await fetch(
+                    'http://localhost:5000/api/forms',
+                    {
+                      method: 'POST',
+                      headers: {
+                        'Content-Type':
+                          'application/json'
+                      },
+
+                      body: JSON.stringify({
+                        formTitle: aiForm.formTitle,
+                        fields: aiForm.fields,
+                        formData: formData
+                      })
+                    }
+                  )
+
+                const result =
+                  await submitResponse.json()
+
+                if (submitResponse.ok) {
+
+                  alert(
+                    'Form submitted successfully!'
+                  )
+
+                  console.log(
+                    'Saved form:',
+                    result
+                  )
+
+                } else {
+
+                  alert(
+                    'Failed to submit form.'
+                  )
+
+                  console.error(result)
+                }
+
+              } catch (error) {
+
+                alert(
+                  'Could not connect to the backend.'
+                )
+
+                console.error(error)
+              }
+            }
+          )
+
+      } catch (error) {
+
+        console.error(
+          'Form generation error:',
+          error
+        )
+
+        alert(
+          'Could not connect to the backend.'
+        )
+      }
+    })
 })
