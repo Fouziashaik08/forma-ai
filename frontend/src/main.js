@@ -147,43 +147,63 @@ document.querySelector('.primary-btn').addEventListener('click', () => {
 
       console.log('AI Form:', aiForm)
 
+      // Create form fields using AI-generated values
       const fieldsHTML = aiForm.fields.map((field) => {
 
+        const value = field.value ?? ''
+
+        // Textarea
         if (field.type === 'textarea') {
           return `
             <label>
               ${field.label}
+
               <textarea
                 name="${field.label}"
                 placeholder="${field.label}"
-              ></textarea>
+              >${value}</textarea>
             </label>
+
             <br><br>
           `
         }
 
+        // Checkbox
         if (field.type === 'checkbox') {
+
+          const checked =
+            value === true ||
+            value === 'true' ||
+            value === 'yes' ||
+            value === 'Yes'
+
           return `
             <label>
               <input
                 type="checkbox"
                 name="${field.label}"
+                ${checked ? 'checked' : ''}
               >
               ${field.label}
             </label>
+
             <br><br>
           `
         }
 
+        // Normal input fields
         return `
           <label>
             ${field.label}
+
             <input
               type="${field.type}"
               name="${field.label}"
               placeholder="${field.label}"
+              value="${value}"
             >
           </label>
+
           <br><br>
         `
       }).join('')
@@ -210,6 +230,7 @@ document.querySelector('.primary-btn').addEventListener('click', () => {
         </div>
       `
 
+      // Submit generated form
       document
         .querySelector('#submit-form-btn')
         .addEventListener('click', async () => {
@@ -221,11 +242,13 @@ document.querySelector('.primary-btn').addEventListener('click', () => {
           const formData = {}
 
           inputs.forEach((input) => {
+
             if (input.type === 'checkbox') {
               formData[input.name] = input.checked
             } else {
               formData[input.name] = input.value
             }
+
           })
 
           try {
@@ -258,6 +281,7 @@ document.querySelector('.primary-btn').addEventListener('click', () => {
             alert('Could not connect to the backend.')
             console.error(error)
           }
+
         })
 
     } catch (error) {
@@ -266,5 +290,7 @@ document.querySelector('.primary-btn').addEventListener('click', () => {
 
       alert('Could not connect to the AI backend.')
     }
+
   })
+
 })

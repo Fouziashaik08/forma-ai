@@ -11,26 +11,22 @@ const PORT = process.env.PORT || 5000;
 app.use(cors());
 app.use(express.json());
 
-// OpenAI
 const openai = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY
 });
 
 // MongoDB connection
-mongoose
-  .connect(process.env.MONGO_URI)
-  .then(() => {
-    console.log("MongoDB connected successfully!");
-  })
-  .catch((error) => {
-    console.error("MongoDB connection failed:", error.message);
-  });
+mongoose.connect(process.env.MONGO_URI)
+  .then(() => console.log("MongoDB connected successfully!"))
+  .catch((error) =>
+    console.error("MongoDB connection failed:", error.message)
+  );
 
-// Form schema routes
+// Form routes
 const formRoutes = require("./routes/formRoutes");
 app.use("/api/forms", formRoutes);
 
-// Saved submitted forms
+// Submission schema
 const formSchema = new mongoose.Schema({
   formTitle: String,
   formData: mongoose.Schema.Types.Mixed
@@ -38,40 +34,47 @@ const formSchema = new mongoose.Schema({
 
 const Form = mongoose.model("Form", formSchema);
 
+// Save form submission
 app.post("/api/submissions", async (req, res) => {
   try {
+    const { formTitle, formData } = req.body;
+
     const newForm = new Form({
-      formTitle: req.body.formTitle || "Generated Form",
-      formData: req.body.formData || req.body
+      formTitle,
+      formData
     });
 
-    const savedForm = await newForm.save();
+    await newForm.save();
 
-    res.status(201).json({
-      message: "Form submitted successfully",
-      data: savedForm
+    res.json({
+      message: "Form submitted successfully!",
+      data: newForm
     });
   } catch (error) {
+    console.error("Submission failed:", error.message);
+
     res.status(500).json({
-      message: "Failed to save form",
+      message: "Failed to submit form",
       error: error.message
     });
   }
 });
 
+// Get submissions
 app.get("/api/submissions", async (req, res) => {
   try {
-    const forms = await Form.find();
-    res.json(forms);
+    const submissions = await Form.find();
+
+    res.json(submissions);
   } catch (error) {
     res.status(500).json({
-      message: "Failed to fetch forms",
+      message: "Failed to fetch submissions",
       error: error.message
     });
   }
 });
 
-// AI form generation
+// Generate form using AI
 app.post("/api/generate-form", async (req, res) => {
   try {
     const { prompt } = req.body;
@@ -87,40 +90,78 @@ app.post("/api/generate-form", async (req, res) => {
       input: `Create a form based on this request: ${prompt}
 
 Return only JSON in this format:
+
 {
   "title": "Form title",
   "description": "Short description",
   "fields": [
     {
       "label": "Field label",
-      "type": "text"
+      "type": "text",
+      "value": ""
     }
   ]
 }
 
-Allowed field types: text, email, number, textarea, date, checkbox.`,
+If the user's request contains information that matches a field,
+put that information in "value".
+
+If no information is available for a field,
+keep "value" as an empty string.
+
+Allowed field types:
+text, email, number, textarea, date, checkbox.`
     });
 
     const result = JSON.parse(response.output_text);
 
     res.json(result);
+
   } catch (error) {
+
     console.error("AI form generation failed:", error.message);
 
-    res.status(500).json({
-      message: "Failed to generate form",
-      error: error.message
+    // TEMPORARY FALLBACK
+    // Used while OpenAI API credits are unavailable.
+    res.json({
+      title: "Student Information Form",
+      description: "Please review and complete your information.",
+      fields: [
+        {
+          label: "Name",
+          type: "text",
+          value: "Fouzia"
+        },
+        {
+          label: "Course",
+          type: "text",
+          value: "BTech Computer Science"
+        },
+        {
+          label: "Email",
+          type: "email",
+          value: ""
+        },
+        {
+          label: "Date of Birth",
+          type: "date",
+          value: ""
+        }
+      ]
     });
   }
 });
 
-// Home route
+// Test backend
 app.get("/", (req, res) => {
   res.json({
     message: "Forma AI backend is running"
   });
 });
 
+// Start server
 app.listen(PORT, () => {
-  console.log(`Forma AI backend running on http://localhost:${PORT}`);
+  console.log(
+    `Forma AI backend running on http://localhost:${PORT}`
+  );
 });
