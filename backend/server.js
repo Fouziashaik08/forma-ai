@@ -55,6 +55,45 @@ const formSchema = new mongoose.Schema({
 
 const Form = mongoose.model('Form', formSchema)
 
+// Validate generated form structure
+function validateForm(form) {
+  if (!form || typeof form !== 'object') {
+    return 'Form must be an object'
+  }
+
+  if (typeof form.title !== 'string' || form.title.trim() === '') {
+    return 'Form title is required'
+  }
+
+  if (!Array.isArray(form.fields)) {
+    return 'Form fields must be an array'
+  }
+
+  for (const field of form.fields) {
+    if (!field || typeof field !== 'object') {
+      return 'Each field must be an object'
+    }
+
+    if (typeof field.name !== 'string' || field.name.trim() === '') {
+      return 'Each field must have a valid name'
+    }
+
+    if (typeof field.label !== 'string' || field.label.trim() === '') {
+      return 'Each field must have a valid label'
+    }
+
+    if (typeof field.type !== 'string' || field.type.trim() === '') {
+      return 'Each field must have a valid type'
+    }
+
+    if (typeof field.required !== 'boolean') {
+      return 'Field required must be a boolean'
+    }
+  }
+
+  return null
+}
+
 app.get('/', (req, res) => {
   res.json({
     message: 'Forma AI backend is running'
@@ -102,9 +141,9 @@ app.post('/api/generate-form', (req, res) => {
   try {
     const { prompt } = req.body
 
-    if (!prompt) {
+    if (typeof prompt !== 'string' || prompt.trim() === '') {
       return res.status(400).json({
-        message: 'Prompt is required'
+        message: 'Prompt is required and must be a non-empty string'
       })
     }
 
@@ -300,12 +339,20 @@ app.post('/api/generate-form', (req, res) => {
       }
     }
 
+    const validationError = validateForm(form)
+
+    if (validationError) {
+      return res.status(500).json({
+        message: 'Generated form is invalid',
+        error: validationError
+      })
+    }
+
     res.json({
       formTitle: form.title,
       description: form.description,
       fields: form.fields
     })
-
   } catch (error) {
     console.error('Form generation failed:', error.message)
 
