@@ -130,13 +130,16 @@ document.querySelector('.primary-btn').addEventListener('click', () => {
 
     try {
 
-      const response = await fetch('http://localhost:5000/api/generate-form', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({ prompt })
-      })
+      const response = await fetch(
+        'http://localhost:5000/api/generate-form',
+        {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({ prompt })
+        }
+      )
 
       const aiForm = await response.json()
 
@@ -151,20 +154,32 @@ document.querySelector('.primary-btn').addEventListener('click', () => {
       const fieldsHTML = aiForm.fields.map((field) => {
 
         const value = field.value ?? ''
+        const required = field.required === true
 
         // Textarea
         if (field.type === 'textarea') {
           return `
-            <label>
-              ${field.label}
+            <div class="form-field">
+              <label>
+                ${field.label}
 
-              <textarea
-                name="${field.label}"
-                placeholder="${field.label}"
-              >${value}</textarea>
-            </label>
+                <textarea
+                  name="${field.name}"
+                  placeholder="${field.label}"
+                  ${required ? 'data-required="true"' : ''}
+                >${value}</textarea>
+              </label>
 
-            <br><br>
+              <p
+                class="validation-message"
+                data-error-for="${field.name}"
+                style="display: none;"
+              >
+                This field needs review.
+              </p>
+            </div>
+
+            <br>
           `
         }
 
@@ -178,43 +193,69 @@ document.querySelector('.primary-btn').addEventListener('click', () => {
             value === 'Yes'
 
           return `
-            <label>
-              <input
-                type="checkbox"
-                name="${field.label}"
-                ${checked ? 'checked' : ''}
-              >
-              ${field.label}
-            </label>
+            <div class="form-field">
+              <label>
+                <input
+                  type="checkbox"
+                  name="${field.name}"
+                  ${checked ? 'checked' : ''}
+                  ${required ? 'data-required="true"' : ''}
+                >
+                ${field.label}
+              </label>
 
-            <br><br>
+              <p
+                class="validation-message"
+                data-error-for="${field.name}"
+                style="display: none;"
+              >
+                This field needs review.
+              </p>
+            </div>
+
+            <br>
           `
         }
 
         // Normal input fields
         return `
-          <label>
-            ${field.label}
+          <div class="form-field">
+            <label>
+              ${field.label}
 
-            <input
-              type="${field.type}"
-              name="${field.label}"
-              placeholder="${field.label}"
-              value="${value}"
+              <input
+                type="${field.type}"
+                name="${field.name}"
+                placeholder="${field.label}"
+                value="${value}"
+                ${required ? 'data-required="true"' : ''}
+              >
+            </label>
+
+            <p
+              class="validation-message"
+              data-error-for="${field.name}"
+              style="display: none;"
             >
-          </label>
+              This field needs review.
+            </p>
+          </div>
 
-          <br><br>
+          <br>
         `
       }).join('')
 
       document.querySelector('#form-result').innerHTML = `
         <div class="generated-form">
 
-          <h2>${aiForm.title}</h2>
+          <h2>${aiForm.formTitle || aiForm.title}</h2>
 
           <p class="form-description">
             ${aiForm.description}
+          </p>
+
+          <p class="review-message" style="display: none;">
+            Please review the highlighted fields before submitting.
           </p>
 
           ${fieldsHTML}
@@ -239,17 +280,78 @@ document.querySelector('.primary-btn').addEventListener('click', () => {
             '.generated-form input, .generated-form textarea'
           )
 
+          let hasValidationError = false
+
           const formData = {}
 
           inputs.forEach((input) => {
+
+            const errorMessage = document.querySelector(
+              `[data-error-for="${input.name}"]`
+            )
+
+            const fieldContainer = input.closest('.form-field')
+
+            // Validate required fields
+            if (input.dataset.required === 'true') {
+
+              const isEmpty =
+                input.type === 'checkbox'
+                  ? !input.checked
+                  : input.value.trim() === ''
+
+              if (isEmpty) {
+
+                hasValidationError = true
+
+                input.classList.add('validation-error')
+
+                if (fieldContainer) {
+                  fieldContainer.classList.add('needs-review')
+                }
+
+                if (errorMessage) {
+                  errorMessage.textContent =
+                    'This required field needs review.'
+                  errorMessage.style.display = 'block'
+                }
+
+                return
+              }
+            }
+
+            // Clear validation error when field is valid
+            input.classList.remove('validation-error')
+
+            if (fieldContainer) {
+              fieldContainer.classList.remove('needs-review')
+            }
+
+            if (errorMessage) {
+              errorMessage.style.display = 'none'
+            }
 
             if (input.type === 'checkbox') {
               formData[input.name] = input.checked
             } else {
               formData[input.name] = input.value
             }
-
           })
+
+          // Stop submission if validation failed
+          if (hasValidationError) {
+
+            const reviewMessage = document.querySelector(
+              '.review-message'
+            )
+
+            reviewMessage.textContent =
+              'Please review the highlighted fields before submitting.'
+
+            reviewMessage.style.display = 'block'
+
+            return
+          }
 
           try {
 
@@ -261,7 +363,7 @@ document.querySelector('.primary-btn').addEventListener('click', () => {
                   'Content-Type': 'application/json'
                 },
                 body: JSON.stringify({
-                  formTitle: aiForm.title,
+                  formTitle: aiForm.formTitle || aiForm.title,
                   formData: formData
                 })
               }
@@ -273,7 +375,7 @@ document.querySelector('.primary-btn').addEventListener('click', () => {
               alert('Form submitted successfully!')
               console.log(result)
             } else {
-              alert('Failed to submit form.')
+              alert(result.message || 'Failed to submit form.')
               console.error(result)
             }
 

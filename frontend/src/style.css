@@ -358,3 +358,26 @@ body {
     padding: 25px;
   }
 }
+.form-field.needs-review {
+  padding: 12px;
+  border: 1px solid #ff6b6b;
+  border-radius: 8px;
+}
+
+.validation-error {
+  border: 2px solid #ff6b6b !important;
+}
+
+.validation-message {
+  margin-top: 6px;
+  color: #ff6b6b;
+  font-size: 14px;
+}
+
+.review-message {
+  margin: 20px 0;
+  padding: 12px;
+  border: 1px solid #ff6b6b;
+  border-radius: 8px;
+  color: #ff6b6b;
+}
