@@ -9,6 +9,10 @@ const PORT = process.env.PORT || 5000
 app.use(cors())
 app.use(express.json())
 
+// -----------------------------
+// Field schema
+// -----------------------------
+
 const fieldSchema = new mongoose.Schema({
   name: {
     type: String,
@@ -36,6 +40,10 @@ const fieldSchema = new mongoose.Schema({
   }
 })
 
+// -----------------------------
+// Main form schema
+// -----------------------------
+
 const formSchema = new mongoose.Schema({
   formTitle: {
     type: String,
@@ -55,7 +63,16 @@ const formSchema = new mongoose.Schema({
 
 const Form = mongoose.model('Form', formSchema)
 
-// Validate generated form structure
+// -----------------------------
+// Saved form model
+// -----------------------------
+
+const SavedForm = require('./models/SavedForm')
+
+// -----------------------------
+// Validate generated form
+// -----------------------------
+
 function validateForm(form) {
   if (!form || typeof form !== 'object') {
     return 'Form must be an object'
@@ -94,11 +111,20 @@ function validateForm(form) {
   return null
 }
 
+// -----------------------------
+// Home route
+// -----------------------------
+
 app.get('/', (req, res) => {
   res.json({
     message: 'Forma AI backend is running'
   })
 })
+
+// -----------------------------
+// Create / submit a form
+// Existing API - keep this
+// -----------------------------
 
 app.post('/api/forms', async (req, res) => {
   try {
@@ -122,7 +148,97 @@ app.post('/api/forms', async (req, res) => {
   }
 })
 
+// -----------------------------
+// Save / update partially completed form
+// Week 4 - Save & Resume
+// -----------------------------
+
+app.post('/api/forms/save', async (req, res) => {
+  try {
+    const {
+      formId,
+      formTitle,
+      formData,
+      progress
+    } = req.body
+
+    if (!formId) {
+      return res.status(400).json({
+        message: 'formId is required'
+      })
+    }
+
+    if (!formTitle) {
+      return res.status(400).json({
+        message: 'formTitle is required'
+      })
+    }
+
+    const savedForm = await SavedForm.findOneAndUpdate(
+      { formId },
+      {
+        formId,
+        formTitle,
+        formData: formData || {},
+        progress: progress ?? 0
+      },
+      {
+        new: true,
+        upsert: true,
+        runValidators: true
+      }
+    )
+
+    res.status(200).json({
+      message: 'Form saved successfully',
+      data: savedForm
+    })
+  } catch (error) {
+    console.error('Save form failed:', error.message)
+
+    res.status(500).json({
+      message: 'Failed to save form',
+      error: error.message
+    })
+  }
+})
+
+// -----------------------------
+// Get saved form by formId
+// Week 4 - Save & Resume
+// -----------------------------
+
+app.get('/api/forms/:id', async (req, res) => {
+  try {
+    const savedForm = await SavedForm.findOne({
+      formId: req.params.id
+    })
+
+    if (!savedForm) {
+      return res.status(404).json({
+        message: 'Saved form not found'
+      })
+    }
+
+    res.json({
+      message: 'Saved form retrieved successfully',
+      data: savedForm
+    })
+  } catch (error) {
+    console.error('Get saved form failed:', error.message)
+
+    res.status(500).json({
+      message: 'Failed to retrieve saved form',
+      error: error.message
+    })
+  }
+})
+
+// -----------------------------
 // Get all submitted forms
+// Existing API - keep this
+// -----------------------------
+
 app.get('/api/forms', async (req, res) => {
   try {
     const forms = await Form.find()
@@ -136,11 +252,15 @@ app.get('/api/forms', async (req, res) => {
   }
 })
 
+// -----------------------------
 // No-cost local form generator
+// -----------------------------
+
 app.post('/api/generate-form', (req, res) => {
   try {
     const { prompt } = req.body
 
+    // Validate prompt
     if (typeof prompt !== 'string' || prompt.trim() === '') {
       return res.status(400).json({
         message: 'Prompt is required and must be a non-empty string'
@@ -149,6 +269,7 @@ app.post('/api/generate-form', (req, res) => {
 
     const lowerPrompt = prompt.toLowerCase()
 
+    // Default form
     let form = {
       title: 'Student Feedback Form',
       description: 'Please share your feedback with us.',
@@ -177,7 +298,10 @@ app.post('/api/generate-form', (req, res) => {
       ]
     }
 
-    // Registration Form
+    // -------------------------
+    // Registration form
+    // -------------------------
+
     if (lowerPrompt.includes('registration')) {
       form = {
         title: 'Registration Form',
@@ -215,7 +339,10 @@ app.post('/api/generate-form', (req, res) => {
       }
     }
 
-    // Contact Form
+    // -------------------------
+    // Contact form
+    // -------------------------
+
     if (lowerPrompt.includes('contact')) {
       form = {
         title: 'Contact Form',
@@ -246,7 +373,11 @@ app.post('/api/generate-form', (req, res) => {
       }
     }
 
-    // Survey Form with conditional logic
+    // -------------------------
+    // Survey form
+    // Conditional field example
+    // -------------------------
+
     if (lowerPrompt.includes('survey')) {
       form = {
         title: 'Survey Form',
@@ -301,7 +432,10 @@ app.post('/api/generate-form', (req, res) => {
       }
     }
 
-    // Event Registration Form
+    // -------------------------
+    // Event registration form
+    // -------------------------
+
     if (lowerPrompt.includes('event')) {
       form = {
         title: 'Event Registration Form',
@@ -339,6 +473,10 @@ app.post('/api/generate-form', (req, res) => {
       }
     }
 
+    // -------------------------
+    // Validate generated form
+    // -------------------------
+
     const validationError = validateForm(form)
 
     if (validationError) {
@@ -348,11 +486,16 @@ app.post('/api/generate-form', (req, res) => {
       })
     }
 
+    // -------------------------
+    // Return generated form
+    // -------------------------
+
     res.json({
       formTitle: form.title,
       description: form.description,
       fields: form.fields
     })
+
   } catch (error) {
     console.error('Form generation failed:', error.message)
 
@@ -363,14 +506,24 @@ app.post('/api/generate-form', (req, res) => {
   }
 })
 
-mongoose.connect(process.env.MONGO_URI)
+// -----------------------------
+// MongoDB connection
+// -----------------------------
+
+mongoose
+  .connect(process.env.MONGO_URI)
   .then(() => {
     console.log('MongoDB connected successfully')
 
     app.listen(PORT, () => {
-      console.log(`Forma AI backend running on http://localhost:${PORT}`)
+      console.log(
+        `Forma AI backend running on http://localhost:${PORT}`
+      )
     })
   })
   .catch((error) => {
-    console.error('MongoDB connection failed:', error.message)
+    console.error(
+      'MongoDB connection failed:',
+      error.message
+    )
   })
