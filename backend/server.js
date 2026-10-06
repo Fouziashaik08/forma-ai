@@ -237,7 +237,32 @@ app.get('/api/forms/:id', async (req, res) => {
     })
   }
 })
+// Delete a saved form
+app.delete('/api/forms/:id', async (req, res) => {
+  try {
+    const deletedForm = await SavedForm.findOneAndDelete({
+      formId: req.params.id
+    })
 
+    if (!deletedForm) {
+      return res.status(404).json({
+        message: 'Saved form not found'
+      })
+    }
+
+    res.json({
+      message: 'Saved form deleted successfully',
+      data: deletedForm
+    })
+  } catch (error) {
+    console.error('Delete saved form failed:', error.message)
+
+    res.status(500).json({
+      message: 'Failed to delete saved form',
+      error: error.message
+    })
+  }
+})
 // -----------------------------
 // Get all submitted forms
 // Existing API - keep this
